@@ -1,12 +1,12 @@
 # <!--- Imports --->
-from json import dumps, loads
+from json import dumps, loads, JSONDecodeError
 from pathlib import Path
 from typing import List, Tuple
 
 from bs4 import Tag
 
 from data.scraper import TableBody, download, file_is_outdated, get_items, get_table
-from log import debug, info
+from log import debug, info, error
 
 # <!--- Constants --->
 REMOTE_SOURCE: str = (
@@ -32,22 +32,30 @@ def extract_data() -> Tuple[List[str], TableBody]:
     if (not data_file.exists()) or file_is_outdated(data_file):
         debug("Data file does not exist, downloading...")
         # See if the downloaded remote source is usable
-        if not source_html_file.exists():
-            html: bytes = download(REMOTE_SOURCE, source_html_file)
-        else:
-            debug("HTML file is up to date, reading...")
-            with open(source_html_file, "rb") as file:
-                html = file.read()
-
-        # Parse to file
-        with open(data_file, "w") as file:
-            table: Tuple[List[str], TableBody] = parse_data(html)
-            file.write(dumps(table, sort_keys=True, indent=2))
-            return table
+        return download_and_parse(source_html_file, data_file)
 
     # Read from file
+    debug("Reading from file...")
     with open(data_file, "r") as file:
-        return loads(file.read())
+        try:
+            return loads(file.read())
+        except JSONDecodeError:
+            return download_and_parse(source_html_file, data_file)
+
+
+def download_and_parse(html_file: Path, _df: Path) -> Tuple[List[str], TableBody]:
+    if not html_file.exists():
+        html: bytes = download(REMOTE_SOURCE, html_file)
+    else:
+        debug("HTML file is up to date, reading...")
+        with open(html_file, "rb") as file:
+            html = file.read()
+
+    # Parse to file
+    with open(_df, "w") as file:
+        table: Tuple[List[str], TableBody] = parse_data(html)
+        file.write(dumps(table, sort_keys=True, indent=2))
+        return table
 
 
 def parse_data(html_source: bytes) -> Tuple[List[str], TableBody]:
