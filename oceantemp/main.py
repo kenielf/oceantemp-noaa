@@ -8,6 +8,6 @@ if __name__ == "__main__":
     info("Starting...")
     # Parse arguments
     # Make sure the data is reachable
-    table = extract_data()
-    print_table(table[0], table[1])
+    table_header, table_body = extract_data()
+    print_table(table_header, table_body)
     # Execute interface
