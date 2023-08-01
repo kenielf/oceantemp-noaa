@@ -1,12 +1,12 @@
 # <!--- Imports --->
-from json import dumps, loads, JSONDecodeError
+from json import JSONDecodeError, dumps, loads
 from pathlib import Path
 from typing import List, Tuple
 
 from bs4 import Tag
 
 from data.scraper import TableBody, download, file_is_outdated, get_items, get_table
-from log import debug, info, error
+from log import debug, error, info
 
 # <!--- Constants --->
 REMOTE_SOURCE: str = (
